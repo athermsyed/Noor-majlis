@@ -2,7 +2,7 @@
 
 A live Quran story and quiz game for a family or community gathering. One laptop runs the big screen, and everyone plays from their own phone.
 
-**Play:** https://athermsyed.github.io/noor-majlis/
+**Play:** https://athermsyed.github.io/Noor-majlis/
 
 ## How an evening runs
 
@@ -25,5 +25,5 @@ Nobody is eliminated. Correct answers earn 100 points plus up to 50 for speed. A
 ## Technical notes
 
 - A single self-contained `index.html`. The avatar art, the recorded narration and the game logic are all inside it.
-- Live sync uses the Friday Arena Firebase Realtime Database under the path `fa/nm/games/<code>`. If Firebase cannot be reached, it falls back to PeerJS.
+- Live sync uses the Friday Arena Firebase Realtime Database under the path `fa/cc/nm/<code>` (the section already open for Crowd Clash). If Firebase cannot be reached, it falls back to PeerJS.
 - Hosted on GitHub Pages from the `main` branch.

@@ -1610,7 +1610,7 @@ function addBots(){ BOTS.forEach(([n,sex,tone],i)=>{ const pid='bot'+i; if(!PL.h
 /* ================= NETWORK: claude.ai room, or PeerJS when hosted on its own ================= */
 const NET={mode:'none',room:null,usr:null,code:'',peer:null,conns:{},conn:null,pres:{},onState:null,hb:null};
 const PFX='noor-majlis-v1-';
-const FB_CFG={apiKey:'',projectId:'friday-arena',databaseURL:'https://friday-arena-default-rtdb.firebaseio.com'}, FB_ROOT='fa/nm/games/';
+const FB_CFG={apiKey:'',projectId:'friday-arena',databaseURL:'https://friday-arena-default-rtdb.firebaseio.com'}, FB_ROOT='fa/cc/nm/';
 let fdb=null;
 async function fbInit(){ try{ if(typeof firebase==='undefined'||location.protocol==='file:'||/[?&]peer/.test(location.search)) return false; const app=firebase.apps.length?firebase.app():firebase.initializeApp(FB_CFG); fdb=app.database();
   const ok=await Promise.race([fdb.ref('.info/serverTimeOffset').once('value').then(()=>fdb.ref(FB_ROOT+'ping').once('value')).then(()=>true,()=>false),new Promise(r=>setTimeout(()=>r(false),7000))]); return ok; }catch(e){ return false; } }
