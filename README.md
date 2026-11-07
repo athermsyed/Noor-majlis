@@ -16,6 +16,19 @@ A live Quran story and quiz game for a family or community gathering. One laptop
 
 Nobody is eliminated. Correct answers earn 100 points plus up to 50 for speed. After each question the correct answer stays on screen with its surah and ayah.
 
+## Host admin
+
+Open https://athermsyed.github.io/Noor-majlis/#admin (or tap **Host admin** on the start screen) and enter PIN **1111**.
+
+- Edit any of the ten questions: the level, the question, the four answers, the correct answer, the reference and the note.
+- Move questions up or down. Questions 1 to 7 play before Story 2, and 8 to 10 after it.
+- **Save questions** saves them online, so the next game on any laptop uses them. No upload to GitHub is needed.
+- **Reset to original** brings back the built-in questions (tap twice, then save).
+
+## Player photo
+
+After choosing a photo, the player drags it to move it and pinches or uses the slider to zoom, so the face fits inside the oval. **Adjust photo** reopens it, and **Remove photo** goes back to a drawn face.
+
 ## Design rules
 
 - Prophets are never drawn. They appear only as a robed figure of light.
@@ -25,5 +38,5 @@ Nobody is eliminated. Correct answers earn 100 points plus up to 50 for speed. A
 ## Technical notes
 
 - A single self-contained `index.html`. The avatar art, the recorded narration and the game logic are all inside it.
-- Live sync uses the Friday Arena Firebase Realtime Database under the path `fa/cc/nm/<code>` (the section already open for Crowd Clash). If Firebase cannot be reached, it falls back to PeerJS.
+- Live sync uses the Friday Arena Firebase Realtime Database under the path `fa/cc/nm/<code>`, and saved questions under `fa/cc/nm/admin/questions` (the section already open for Crowd Clash). If Firebase cannot be reached, it falls back to PeerJS.
 - Hosted on GitHub Pages from the `main` branch.

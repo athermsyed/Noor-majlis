@@ -496,6 +496,44 @@ html,body{background:var(--bg)}
 .endlist{display:grid;grid-template-columns:1fr 1fr;gap:.4cqw 2cqw;margin-top:1.2cqw;text-align:left;font-size:1.6cqw}
 .endlist div{display:flex;gap:.8cqw;align-items:baseline;border-bottom:.1cqw solid rgba(138,100,20,.3);padding-bottom:.3cqw}
 .endlist span{color:#8a6414;font-weight:800;width:2cqw}.endlist b{flex:1}.endlist em{font-style:normal;font-weight:800;color:#0d4a3f}
+/* photo cropper */
+.cbox{position:relative;width:min(300px,78vw);aspect-ratio:.72;margin:0 auto;overflow:hidden;border-radius:18px;background:#062b25;touch-action:none;cursor:grab;user-select:none}
+#ph .cbox{width:min(300px,78vw)}
+.cbox img{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;width:auto;height:auto;pointer-events:none}
+.cmask{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 44% 44% at 50% 50%,transparent 99%,rgba(4,31,26,.62) 100%)}
+.cmask::after{content:"";position:absolute;left:6%;right:6%;top:6%;bottom:6%;border-radius:50%;border:3px dashed var(--gold2)}
+.czoom{display:flex;align-items:center;gap:10px;font-size:24px;font-weight:800;color:var(--gold2);max-width:320px;width:100%;margin:0 auto}
+.czoom input{flex:1;accent-color:var(--gold);height:32px}
+.photoacts{display:flex;gap:8px;margin-bottom:8px}.photoacts .pb{padding:9px;font-size:14px}
+.hadmin{justify-self:center;border:0;background:none;color:var(--muted);text-decoration:underline;font-size:14px;padding:8px}
+/* admin */
+#adminView{min-height:100dvh;background:var(--bg)}
+.adwrap{max-width:980px;margin:0 auto;padding-block:24px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+.adgate{max-width:360px;margin:12vh auto 0;display:grid;gap:12px;text-align:center}
+.adgate h1,.adhead h1{font-family:var(--display);font-size:34px;color:var(--gold2)}
+.adgate form{display:grid;gap:10px}
+.adgate input{font-size:26px;text-align:center;letter-spacing:8px;padding:12px;border-radius:12px;border:2px solid var(--gold);background:rgba(0,0,0,.2);color:#fff}
+.adhead{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:flex-end}
+.adhead>div:first-child{flex:1 1 380px;min-width:0}.adhead p{color:var(--muted);line-height:1.5;max-width:60ch}
+.adbtns{display:flex;flex-wrap:wrap;gap:8px}.adbtns .pb{width:auto;padding:11px 16px;font-size:15px}
+.admsg{color:var(--gold2);font-weight:700;min-height:1.3em}.admsg.err{color:#ffb4b4}
+.adlist{display:grid;gap:14px}
+.adq{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:10px;min-width:0}
+.adqtop{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.adqtop b{font-family:var(--display);font-size:20px;color:var(--gold2)}
+.adtag{font-size:12px;font-weight:800;background:var(--gold);color:#2a1d05;border-radius:99px;padding:3px 9px}
+.admove{margin-left:auto;display:flex;gap:6px}.admove button{width:38px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--fg)}
+.admove button:disabled{opacity:.3}
+.adq label{display:grid;gap:4px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);min-width:0}
+.adqtop label{display:flex;align-items:center;gap:6px}
+.adq textarea,.adq input:not([type=radio]),.adq select{font:inherit;font-size:16px;text-transform:none;letter-spacing:0;font-weight:600;color:#fff;background:rgba(0,0,0,.22);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%;min-width:0}
+.adq select{width:auto}
+.adopts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.adq .adopt{display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;border:2px solid transparent;border-radius:12px;padding:4px 6px;background:rgba(0,0,0,.12)}
+.adq .adopt.on{border-color:var(--gold)}.adopt input[type=radio]{width:22px;height:22px;accent-color:var(--gold);flex:none}
+.adopt b{color:var(--gold2);font-size:16px}
+.adhint{font-size:13px;color:var(--muted)}
+.adrow{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:8px}
+@media (max-width:560px){.adrow{grid-template-columns:minmax(0,1fr)}}
 </style>
 <main id="home" class="home">
   <div class="homein">
@@ -507,8 +545,11 @@ html,body{background:var(--bg)}
       <button class="hbig alt" id="hHost"><b>Host on the big screen</b><span>For the laptop connected to the TV or projector</span></button>
     </div>
     <p class="hnote" id="hnote" role="status"></p>
+    <button class="hadmin" id="hAdmin">Host admin</button>
   </div>
 </main>
+
+<section id="adminView" hidden></section>
 
 <section id="phoneView" hidden><div class="ph" id="ph"></div></section>
 
@@ -1554,9 +1595,13 @@ const tv=document.getElementById('tv'), ph=document.getElementById('ph');
 const S={timers:[],started:false,bgA:null,mode:'home',scene:-1,auto:true};
 function T(fn,ms){ const id=setTimeout(()=>{ try{fn();}catch(e){console.error(e);} },ms); S.timers.push(id); return id; }
 const VO={a:null,tok:0};
+/* one audio element, unlocked by the host's tap, reused for every recording (Safari and iPad block new audio started later) */
+let VOEL=null; const SILENT='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
+function voEl(){ if(!VOEL){ VOEL=new Audio(); VOEL.preload='auto'; } return VOEL; }
+function unlockAudio(){ const a=voEl(); try{ a.src=SILENT; const p=a.play(); if(p) p.then(()=>{ if(a.src===SILENT) a.pause(); }).catch(()=>{}); }catch(e){} }
 function stopVO(){ VO.tok++; if(VO.a){ try{ VO.a.pause(); }catch(e){} VO.a=null; } const m=document.querySelector('#elder .mouth'); if(m) m.setAttribute('ry','1.4'); const e=document.getElementById('elder'); if(e) e.classList.remove('synced'); }
 function playVO(A){ stopVO(); if(!A) return; const tok=VO.tok, env=A.env, t0=performance.now();
-  if(SND.on&&S.started){ try{ const a=new Audio(A.src); a.volume=1; VO.a=a; a.play().catch(()=>{}); if(S.bgA) S.bgA.volume=.12; a.onended=()=>{ if(S.bgA) S.bgA.volume=.3; }; }catch(e){} }
+  if(SND.on&&S.started){ try{ const a=voEl(); a.pause(); a.src=A.src; a.currentTime=0; a.volume=1; VO.a=a; a.play().catch(()=>{}); if(S.bgA) S.bgA.volume=.12; a.onended=()=>{ if(S.bgA) S.bgA.volume=.3; }; }catch(e){} }
   const el=document.getElementById('elder'); if(el){ el.classList.add('synced'); el.classList.remove('talk'); }
   let sm=0; (function tick(){ if(tok!==VO.tok) return; const a=VO.a; const t=(a&&a.currentTime>0)?a.currentTime:(performance.now()-t0)/1000;
     const k=Math.floor(t*25); const v=k<env.length?(+env[k])/9:0; if(k>=env.length+4){ const m=document.querySelector('#elder .mouth'); if(m) m.setAttribute('ry','1.4'); return; }
@@ -1566,6 +1611,7 @@ function playVO(A){ stopVO(); if(!A) return; const tok=VO.tok, env=A.env, t0=per
 function clearAll(){ stopVO(); S.timers.forEach(clearTimeout); S.timers=[]; try{speechSynthesis.cancel();}catch(e){} }
 const $=(sel,r)=>(r||tv).querySelector(sel), $$=(sel,r)=>[...(r||tv).querySelectorAll(sel)];
 const byId=id=>document.getElementById(id);
+const plain=h=>{ const d=document.createElement('div'); d.innerHTML=String(h==null?'':h); return d.textContent; };
 function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstChild; }
 const esc=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function svgAv(p,emo,o){ o=o||{}; return ArenaAvatar.render({body:p.body,head:p.head,skin:p.skin,team:o.team||GOLD,emotion:emo||'happy',name:p.n,animate:o.anim!==false,width:o.w||200}); }
@@ -1677,7 +1723,7 @@ const Q={k:-1,open:false,t0:0,done:false};
 const DUA={on:false};
 let SUB={};
 function stateObj(){ const sc=SCN[S.scene]||{}; const s={g:GAME,st:sc.rk||'',s:sc.key||'home',k:sc.k!=null?sc.k:-1,b:SUB.b!=null?SUB.b:-1,ph:SUB.ph||''};
-  if(sc.key==='q'){ s.open=Q.open; if(Q.open) s.rem=Math.max(0,20-(Date.now()-Q.t0)/1000); }
+  if(sc.key==='q'){ s.open=Q.open; if(Q.open) s.rem=Math.max(0,20-(Date.now()-Q.t0)/1000); const q=QS[sc.k]; if(q){ s.qd={l:q.l,q:q.q,o:q.o}; if(SUB.ph==='rev') Object.assign(s.qd,{a:q.a,ref:q.ref,note:q.note}); } }
   if(SUB.ph==='rev'||sc.key==='top3'||sc.key==='dua'||sc.key==='end'){ const rk=ranked(); s.r={}; rk.forEach((p,i)=>{ if(!p.bot) s.r[p.pid]=[p.score,i+1,p.ans[Q.k]===undefined?-1:(QS[Q.k]&&p.ans[Q.k]===QS[Q.k].a?1:0),p.last||0]; }); s.n=rk.length; }
   if(sc.key==='top3'||sc.key==='dua'||sc.key==='end'){ const w=ranked()[0]; if(w){ s.wn=w.n; s.wx=w.sex; } }
   return s; }
@@ -1692,7 +1738,7 @@ function rowHTML(list,o){ o=o||{}; const N=list.length; if(N<=12){ const w=Math.
 const SCN=[];
 const add=(key,o)=>SCN.push(Object.assign({key},o));
 add('lobby',{label:'Join',run:runLobby});
-add('gather',{label:'Gather',run:runGather,dur:()=>9200+Math.round(((window.WELCOME_AUDIO||{}).dur||8)*1000)+1500});
+add('gather',{label:'Gather',run:runGather,dur:()=>7400+Math.round(((window.WELCOME_AUDIO||{}).dur||8)*1000)+1500});
 add('story',{label:'Story 1',rk:'ant',run:()=>runStory('ant')});
 add('play',{label:'Let us play',run:runPlay,dur:()=>13000});
 for(let k=0;k<10;k++){ add('q',{label:'Question '+(k+1),k,run:()=>runQ(k)}); if(k===6) add('story',{label:'Story 2',rk:'musa',run:()=>runStory('musa')}); }
@@ -1704,7 +1750,7 @@ function go(i){ clearAll(); DUA.on=false; Q.open=false; SUB={}; S.scene=Math.max
   byId('hscene').textContent=sc.label; renderHostMap(); sc.run(); sendState();
   if(S.auto&&sc.dur) T(next,sc.dur()); }
 function next(){ if(S.scene<SCN.length-1) go(S.scene+1); }
-function renderHostMap(){ byId('hmap').innerHTML=SCN.map((s,i)=>`<button class="hm ${i===S.scene?'on':''}" data-i="${i}">${s.label}</button>`).join(''); byId('hmap').querySelectorAll('.hm').forEach(b=>b.onclick=()=>go(+b.dataset.i)); }
+function renderHostMap(){ byId('hmap').innerHTML=SCN.map((s,i)=>`<button class="hm ${i===S.scene?'on':''}" data-i="${i}">${s.label}</button>`).join(''); byId('hmap').querySelectorAll('.hm').forEach(b=>b.onclick=()=>{ unlockAudio(); go(+b.dataset.i); }); }
 
 function joinURL(){ if(NET.mode==='room') return ARTIFACT_URL; if(!/^https?:/.test(location.protocol)) return ''; return location.href.split('#')[0]+'#join-'+NET.code; }
 function qrSVG(text){ try{ const q=qrcode(0,'M'); q.addData(text); q.make(); return q.createSvgTag({cellSize:5,margin:2,scalable:true}); }catch(e){ return ''; } }
@@ -1713,16 +1759,16 @@ function runLobby(){ const u=joinURL();
     <div class="qrbox"><div class="qr">${u?qrSVG(u):''}</div><div><div style="font-size:1.4cqw;font-weight:700">Join on your phone</div>${NET.mode!=='room'?`<b>${NET.code}</b><div style="font-size:1.2cqw;max-width:22cqw">Scan, or open this page and tap Join, then enter the code</div>`:`<b style="font-size:2cqw;letter-spacing:.05cqw">Scan the code</b><div style="font-size:1.2cqw;max-width:22cqw">or open the same Noor Majlis link and tap Join</div>`}<div style="font-size:1.4cqw;font-weight:800;margin-top:.4cqw" id="jc">${PL.size} here</div></div></div>
     <div class="slots" id="slots"></div><button class="beginbtn" id="beginbtn">Begin, Bismillah &#9654;</button>`;
   players().forEach(lobbyAdd);
-  byId('beginbtn').onclick=()=>{ if(!PL.size){ addBots(); } go(1); }; }
+  byId('beginbtn').onclick=()=>{ unlockAudio(); if(!PL.size){ addBots(); } go(1); }; }
 function lobbyAdd(p){ const sl=byId('slots'); if(!sl) return; if(sl.querySelector(`[data-id="${p.id}"]`)) return; const d=el(`<div class="slot"></div>`); d.innerHTML=fig(p,'happy'); sl.appendChild(d); const jc=byId('jc'); if(jc) jc.textContent=PL.size+' here';
   const n=PL.size; sl.style.gridTemplateColumns=`repeat(${n>24?8:n>12?7:6},1fr)`; }
 
 function runGather(){ tv.innerHTML=BG('majlis')+elderHTML()+seatHTML({offstage:true}); const e=$('#elder'); e.style.opacity=0; e.style.transition='opacity 1.4s'; T(()=>e.style.opacity=1,300);
   const pos=seatLayout(players()); players().forEach((p,i)=>T(()=>{ const w=plEl(p), f=figOf(p); f.classList.add('walk'); w.style.left=pos[i].x+'%'; T(()=>f.classList.remove('walk'),3300); },600+(i%8)*240));
   T(()=>FX.air(),600);
-  T(()=>{ banner('بِسْمِ اللَّهِ','Bismillah'); speak('Bismillah',.8); FX.light(); listeners(true); },5000);
-  T(()=>{ tv.appendChild(el(`<div class="rcard"><div class="rtop"><span>Welcome</span><span>Shaykh Abdullah</span></div><div class="ren" style="margin-top:.8cqw">Assalamu alaikum, everyone.</div><div class="rnar">Please sit with us. Before we play, a short reminder from the Quran.</div></div>`)); playVO(window.WELCOME_AUDIO); elder(true,true); T(()=>elder(true,false),2400); },8400);
-  T(()=>{ stopVO(); elder(false,false); },8400+Math.round(((window.WELCOME_AUDIO||{}).dur||8)*1000)+300); }
+  T(()=>{ banner('بِسْمِ اللَّهِ','Bismillah'); speak('Bismillah',.8); FX.light(); listeners(true); },4000);
+  T(()=>{ tv.appendChild(el(`<div class="rcard"><div class="rtop"><span>Welcome</span><span>Shaykh Abdullah</span></div><div class="ren" style="margin-top:.8cqw">Assalamu alaikum, everyone.</div><div class="rnar">Please sit with us. Before we play, a short reminder from the Quran.</div></div>`)); playVO(window.WELCOME_AUDIO); S.welcomed=GAME; elder(true,true); T(()=>elder(true,false),2400); },6600);
+  T(()=>{ stopVO(); elder(false,false); },6600+Math.round(((window.WELCOME_AUDIO||{}).dur||8)*1000)+300); }
 
 function runStory(key){ const R0=REM[key], me=S.scene;
   tv.innerHTML=BG('majlis')+elderHTML()+seatHTML()+`<div class="rcard" id="rc"></div><button class="nextpart" id="np">Next part &#9654;</button>`; listeners(true);
@@ -1735,7 +1781,10 @@ function runStory(key){ const R0=REM[key], me=S.scene;
     elder(true,!!b.g); setTimeout(()=>{ if(S.scene===me) elder(true,false); },3200);
     if(k>0) FX.air();
     bt=setTimeout(()=>run(k+1),d); S.timers.push(bt); }
-  $('#np').onclick=()=>run(k+1); T(()=>run(0),0); }
+  $('#np').onclick=()=>run(k+1);
+  if(key==='ant'&&S.welcomed!==GAME&&window.WELCOME_AUDIO){ S.welcomed=GAME; const rc=$('#rc'); rc.innerHTML=`<div class="rtop"><span>Welcome</span><span>Shaykh Abdullah</span></div><div class="ren" style="margin-top:.8cqw">Assalamu alaikum, everyone.</div><div class="rnar">Please sit with us. Before we play, a short reminder from the Quran.</div>`;
+    playVO(window.WELCOME_AUDIO); elder(true,true); T(()=>elder(true,false),2400); T(()=>run(0),Math.round(WELCOME_AUDIO.dur*1000)+900); }
+  else T(()=>run(0),0); }
 
 function runPlay(){ tv.innerHTML=BG('majlis')+elderHTML()+seatHTML()+`<div class="rcard"><div class="rtop"><span>Shaykh Abdullah</span><span>Time to play</span></div><div class="ren" style="margin-top:.8cqw">JazakumAllahu khayran for listening.</div><div class="rnar">Now, let us play a game together. Ten questions, all from the Quran. Take your time, and enjoy.</div></div>`;
   elder(true,true); T(()=>elder(true,false),3000); T(()=>elder(false,false),5200);
@@ -1748,7 +1797,7 @@ function runQ(k){ const q=QS[k]; Q.k=k; Q.open=false; Q.done=false; SUB={ph:'q'}
   tv.innerHTML=BG('arena')+`<div class="qcard"><div class="qtop"><span class="lvl ${q.l}">${LVL[q.l]}</span><span>Question ${k+1} of 10</span></div><div class="qtext">${q.q}</div></div>
     <div class="ring"><svg viewBox="0 0 100 100"><circle class="bgc" cx="50" cy="50" r="42"/><circle class="fgc" id="rf" cx="50" cy="50" r="42"/></svg><span id="rs">20</span></div>
     <div class="opts" id="opts">${q.o.map((o,i)=>`<div class="opt k${i}"><b>${'ABCD'[i]}</b><span>${o}</span><span class="n"></span></div>`).join('')}</div>`+rowHTML(list)+`<div class="ansc" id="ansc"></div>`;
-  T(()=>speak(q.q),900);
+  T(()=>speak(plain(q.q)),900);
   $$('.opt').forEach((o,i)=>T(()=>{ o.classList.add('in'); FX.tap(); },2600+i*650));
   T(()=>{ Q.open=true; Q.t0=Date.now(); sendState(); tickQ(); botsAnswer(k); },5200); }
 function tickQ(){ if(!Q.open) return; const el2=(Date.now()-Q.t0)/1000, left=Math.max(0,20-el2); const rs=$('#rs'), rf=$('#rf'); if(!rs) return;
@@ -1805,12 +1854,15 @@ function phoneJoinForm(err){ S.mode='phone'; show('phoneView');
     <label class="pfield"><small>Your name</small><input id="jname" maxlength="16" autocomplete="given-name" value="${esc(ME.name||lsGet('noor.name'))}"></label>
     <div class="seg" id="jsex"><button data-v="m" class="${ME.sex==='m'?'on':''}">Brother</button><button data-v="f" class="${ME.sex==='f'?'on':''}">Sister</button></div>
     <div class="photorow"><label class="photo" id="jphoto">${ME.img?`<img src="${ME.img}" alt="Your photo">`:'<span class="s">Add a photo</span>'}<input type="file" id="jfile" accept="image/*" aria-label="Take or choose a photo"></label>
-      <div><div class="s" style="text-align:left">A photo is optional. Without one, pick a skin tone:</div><div class="tones" id="jtone">${SKINS.map((c,i)=>`<button data-v="${i}" class="${+ME.tone===i?'on':''}" style="background:${c}" aria-label="Skin tone ${i+1}"></button>`).join('')}</div></div></div>
+      <div>${ME.img?`<div class="photoacts">${ME.srcURL?'<button class="pb alt" id="jadjust">Adjust photo</button>':''}<button class="pb alt" id="jremove">Remove photo</button></div>`:''}<div class="s" style="text-align:left">A photo is optional. Without one, pick a skin tone:</div><div class="tones" id="jtone">${SKINS.map((c,i)=>`<button data-v="${i}" class="${+ME.tone===i?'on':''}" style="background:${c}" aria-label="Skin tone ${i+1}"></button>`).join('')}</div></div></div>
     <div class="status" id="jerr">${err?esc(err):''}</div><button class="pb" id="jgo">Join</button>`;
   ph.querySelectorAll('#jsex button').forEach(b=>b.onclick=()=>{ ME.sex=b.dataset.v; ph.querySelectorAll('#jsex button').forEach(x=>x.classList.toggle('on',x===b)); });
   ph.querySelectorAll('#jtone button').forEach(b=>b.onclick=()=>{ ME.tone=+b.dataset.v; ph.querySelectorAll('#jtone button').forEach(x=>x.classList.toggle('on',x===b)); });
-  const onPick=async e=>{ const f=e.target.files&&e.target.files[0]; if(!f) return; try{ ME.img=await shrinkPhoto(f); byId('jphoto').innerHTML=`<img src="${ME.img}" alt="Your photo"><input type="file" id="jfile" accept="image/*" aria-label="Change photo">`; byId('jfile').onchange=onPick; }catch(x){ byId('jerr').textContent='That photo could not be read. Try another, or skip it.'; } };
-  byId('jfile').onchange=onPick;
+  const keep=()=>({name:byId('jname').value,code:byId('jcode')?byId('jcode').value:''});
+  const back=k=>{ phoneJoinForm(); byId('jname').value=k.name; if(byId('jcode')) byId('jcode').value=k.code; };
+  byId('jfile').onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(!f) return; const k=keep(); if(ME.srcURL){ try{ URL.revokeObjectURL(ME.srcURL); }catch(x){} } ME.srcURL=URL.createObjectURL(f); openCropper(ME.srcURL,()=>back(k)); };
+  const adj=byId('jadjust'); if(adj) adj.onclick=()=>{ const k=keep(); openCropper(ME.srcURL,()=>back(k)); };
+  const rm=byId('jremove'); if(rm) rm.onclick=()=>{ const k=keep(); ME.img=''; ME.srcURL=''; back(k); };
   byId('jgo').onclick=async()=>{ const name=byId('jname').value.trim().replace(/\s+/g,' '); if(!name){ byId('jerr').textContent='Please type your name.'; return; }
     ME.name=name; lsSet('noor.name',name); SND.init(); byId('jgo').disabled=true; byId('jerr').textContent='Connecting...';
     try{ if(NET.mode==='peer'||NET.mode==='fb'){ const c=(byId('jcode').value||'').toUpperCase().replace(/[^A-Z]/g,''); if(c.length!==4){ byId('jerr').textContent='The code has 4 letters.'; byId('jgo').disabled=false; return; } NET.code=c; }
@@ -1819,6 +1871,33 @@ function phoneJoinForm(err){ S.mode='phone'; show('phoneView');
       await setPres({role:'player',pid:ME.pid,name:ME.name,sex:ME.sex,tone:ME.tone,img:ME.img||null,ans:null,ameen:null});
       ME.key=''; renderPhone(); }
     catch(x){ byId('jgo').disabled=false; byId('jerr').textContent=NET.mode!=='room'?'Could not reach the game. Check the code on the big screen and try again.':'Could not connect. Please try again.'; } }; }
+function openCropper(src,done){ const box=ph; const prevHTML=null;
+  box.innerHTML=`<div class="t">Fit your face in the oval</div><div class="s">Drag the photo to move it. Pinch, or use the slider, to zoom in on your face.</div>
+    <div class="cbox" id="cbox"><img id="cimg" alt="" draggable="false"><div class="cmask"></div></div>
+    <label class="czoom"><span>&#8722;</span><input type="range" id="czoom" min="1" max="6" step="0.01" value="1" aria-label="Zoom"><span>+</span></label>
+    <div class="status" id="cerr"></div><button class="pb" id="cok">Use this photo</button><button class="pb alt" id="ccancel">Cancel</button>`;
+  const cb=byId('cbox'), im=byId('cimg'), zr=byId('czoom'); let iw=0, ih=0, base=1, z=1, tx=0, ty=0; const VW=()=>cb.clientWidth, VH=()=>cb.clientHeight;
+  const clamp=()=>{ const S=base*z; tx=Math.min(0,Math.max(VW()-iw*S,tx)); ty=Math.min(0,Math.max(VH()-ih*S,ty)); };
+  const draw=()=>{ clamp(); im.style.transform=`translate(${tx}px,${ty}px) scale(${base*z})`; };
+  const zoomTo=(nz,cx,cy)=>{ nz=Math.max(1,Math.min(6,nz)); if(cx==null){ cx=VW()/2; cy=VH()*.45; } const S0=base*z, S1=base*nz; tx=cx-(cx-tx)*S1/S0; ty=cy-(cy-ty)*S1/S0; z=nz; zr.value=z; draw(); };
+  im.onload=()=>{ iw=im.naturalWidth; ih=im.naturalHeight; base=Math.max(VW()/iw,VH()/ih); z=1; tx=(VW()-iw*base)/2; ty=(VH()-ih*base)/2; draw(); zoomTo(1.6,VW()/2,VH()*.4); };
+  im.onerror=()=>{ byId('cerr').textContent='That photo could not be opened. Try another one.'; };
+  im.src=src;
+  const pts=new Map(); let last=null, pinch=null;
+  cb.addEventListener('pointerdown',e=>{ cb.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); last={x:e.clientX,y:e.clientY}; pinch=null; e.preventDefault(); });
+  cb.addEventListener('pointermove',e=>{ if(!pts.has(e.pointerId)) return; pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); const r=cb.getBoundingClientRect();
+    if(pts.size>=2){ const [a,b]=[...pts.values()]; const d=Math.hypot(a.x-b.x,a.y-b.y), mx=(a.x+b.x)/2-r.left, my=(a.y+b.y)/2-r.top;
+      if(pinch){ zoomTo(pinch.z*d/pinch.d,mx,my); tx+=mx-pinch.mx; ty+=my-pinch.my; draw(); pinch.mx=mx; pinch.my=my; } else pinch={d,z,mx,my}; }
+    else if(last){ tx+=e.clientX-last.x; ty+=e.clientY-last.y; last={x:e.clientX,y:e.clientY}; draw(); } e.preventDefault(); });
+  const up=e=>{ pts.delete(e.pointerId); pinch=null; const v=[...pts.values()][0]; last=v?{x:v.x,y:v.y}:null; };
+  cb.addEventListener('pointerup',up); cb.addEventListener('pointercancel',up);
+  cb.addEventListener('wheel',e=>{ e.preventDefault(); const r=cb.getBoundingClientRect(); zoomTo(z*(e.deltaY<0?1.08:1/1.08),e.clientX-r.left,e.clientY-r.top); },{passive:false});
+  zr.oninput=()=>zoomTo(+zr.value);
+  byId('ccancel').onclick=()=>done();
+  byId('cok').onclick=()=>{ if(!iw) return; const S=base*z, sx=-tx/S, sy=-ty/S, sw=VW()/S, sh=VH()/S; const small=NET.mode==='room';
+    let H=small?84:220, q=small?.62:.82, out='';
+    for(let t=0;t<8;t++){ const W=Math.round(H*.72), c=document.createElement('canvas'); c.width=W; c.height=H; const g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,W,H); g.drawImage(im,sx,sy,sw,sh,0,0,W,H); out=c.toDataURL('image/jpeg',q); if(out.length<(small?2700:24000)) break; q-=.08; if(t>2) H-=small?8:20; }
+    ME.img=out; done(); }; }
 function shrinkPhoto(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>{ const img=new Image(); img.onload=()=>{ const iw=img.naturalWidth, ih=img.naturalHeight; const bh=Math.min(ih*.8,iw/.72*.8), bw=bh*.72, bx=(iw-bw)/2, by=ih*.42-bh/2;
   let H=78, q=.62, out=''; for(let t=0;t<6;t++){ const W=Math.round(H*.72), c=document.createElement('canvas'); c.width=W; c.height=H; c.getContext('2d').drawImage(img,bx,by,bw,bh,0,0,W,H); out=c.toDataURL('image/jpeg',q); if(out.length<2700) break; q-=.08; if(t>2) H-=8; }
   res(out); }; img.onerror=rej; img.src=r.result; }; r.onerror=rej; r.readAsDataURL(file); }); }
@@ -1828,15 +1907,15 @@ function onPhoneState(s){ if(!s||typeof s!=='object') return; const prev=ME.st; 
   renderPhone(); }
 function avBox(emo){ const me=meAsPlayer(); return `<div class="pav">${svgAv(me,emo||'happy')}</div>`; }
 function renderPhone(){ if(!ME.joined) return; const s=ME.st;
-  const key=s?[s.g,s.s,s.k,s.b,s.ph,s.open?1:0,ME.ans[s.g+':'+s.k]!=null?1:0].join('|'):'none'; if(key===ME.key) return; ME.key=key;
+  const key=s?[s.g,s.s,s.k,s.b,s.ph,s.open?1:0,ME.ans[s.g+':'+s.k]!=null?1:0,s.qd&&s.qd.a!=null?1:0].join('|'):'none'; if(key===ME.key) return; ME.key=key;
   const C=h=>{ ph.innerHTML=`<div class="center">${h}</div>`; };
   if(!s||s.s==='home'||s.s==='lobby'){ C(`<div class="chip t">You are here</div>${avBox()}<div class="t">Welcome, ${esc(ME.name)}</div><div class="s">Please watch the big screen. The majlis begins soon, InshaAllah.</div><button class="pb alt" id="chg" style="font-size:15px">Change my name or photo</button>`); byId('chg').onclick=()=>{ ME.joined=false; setPres({role:null}); phoneJoinForm(); }; return; }
   if(s.s==='gather') return C(`${avBox()}<div class="t">Please sit and listen</div><div class="s">Shaykh Abdullah is about to share a short reminder. The ayat will also show here in large text.</div>`);
   if(s.s==='story'){ const R0=REM[storyKeyFor(s)]; const b=R0&&R0.beats[Math.max(0,s.b)]; if(!b) return C(`<div class="t">Please listen</div>`);
     return C(`<div class="chip">Part ${Math.max(0,s.b)+1} of ${R0.beats.length}</div>${b.ar?`<div class="par">${AR(b.ar)}</div>`:''}<div class="t" style="font-size:20px">${b.en}</div><div class="s">${R0.sura} &middot; ${b.ref}</div><div class="pnote">${b.nar}</div>`); }
   if(s.s==='play') return C(`<div class="chip g">Get ready</div><div class="t">Ten questions</div><div class="s">Each question appears here with four big buttons. You have 20 seconds; there is no rush.</div>`);
-  if(s.s==='q'){ const q=QS[s.k]; if(!q) return; const mine=ME.ans[s.g+':'+s.k];
-    if(s.ph==='rev'){ const r=s.r&&s.r[ME.pid]; const ok=r?r[2]===1:mine===q.a;
+  if(s.s==='q'){ const q=s.qd||QS[s.k]; if(!q) return; const mine=ME.ans[s.g+':'+s.k];
+    if(s.ph==='rev'){ const r=s.r&&s.r[ME.pid]; if(q.a==null) return; const ok=r?r[2]===1:mine===q.a;
       return C(`<div class="chip ${ok?'g':'t'}">${ok?'MashaAllah, correct':'Not this time'}</div>${avBox(ok?'happy':'thinking')}<div class="t">${'ABCD'[q.a]}. ${q.o[q.a]}</div><div class="s">${q.ref}</div><div class="pnote">${q.note}</div>${r?`<div class="s">${ok?'+'+r[3]+' points &middot; ':''}${r[0]} points &middot; place ${r[1]} of ${s.n}</div>`:''}`); }
     if(mine!=null) return C(`<div class="chip">Question ${s.k+1} of 10</div>${avBox('thinking')}<div class="t">Locked in</div><div class="s">You chose <b>${'ABCD'[mine]}. ${q.o[mine]}</b>. Watch the big screen.</div>`);
     ph.innerHTML=`<div class="chip" style="align-self:center">${LVL[q.l]} &middot; ${s.k+1} of 10</div><div class="pq">${q.q}</div>${s.open?`<div class="ptime"><i id="ptb"></i></div>`:'<div class="s">The answers are coming...</div>'}<div class="pans" id="pa">${q.o.map((o,i)=>`<button class="k${i}" ${s.open?'':'disabled style="opacity:.4"'}><b>${'ABCD'[i]}</b>${o}</button>`).join('')}</div>`;
@@ -1851,20 +1930,69 @@ function renderPhone(){ if(!ME.joined) return; const s=ME.st;
   C(`${avBox()}<div class="t">Please watch the big screen</div>`); }
 function storyKeyFor(s){ return s.st||'ant'; }
 
+
+/* ================= HOST ADMIN: edit the questions (PIN 1111) ================= */
+const DEFQ=JSON.parse(JSON.stringify(QS));
+const ADM_PIN='1111', QKEY='noor.questions';
+const qRef=()=>fdb?fdb.ref(FB_ROOT+'admin/questions'):null;
+function validQ(x){ return x&&typeof x.q==='string'&&x.q.trim()&&Array.isArray(x.o)&&x.o.length===4&&x.o.every(o=>typeof o==='string'&&o.trim())&&Number.isInteger(x.a)&&x.a>=0&&x.a<4; }
+function toText(q){ return {l:q.l,q:plain(q.q),o:q.o.map(plain),a:q.a,ref:plain(q.ref),note:plain(q.note)}; }
+function fromText(q){ return {l:['e','m','h'].includes(q.l)?q.l:'m',q:esc(q.q.trim()),o:q.o.map(o=>esc(o.trim())),a:q.a,ref:esc((q.ref||'').trim()),note:esc((q.note||'').trim())}; }
+function applyQs(list){ if(!Array.isArray(list)) return false; const ok=list.filter(validQ).slice(0,10); if(ok.length!==10) return false; QS.splice(0,QS.length,...ok.map(fromText)); return true; }
+async function loadQs(){ let v=null; try{ if(NET.mode==='fb'&&qRef()){ const sn=await Promise.race([qRef().once('value'),new Promise((_,j)=>setTimeout(()=>j(0),5000))]); v=sn&&sn.val(); } }catch(e){}
+  if(!v){ try{ v=JSON.parse(lsGet(QKEY)||'null'); }catch(e){ v=null; } }
+  if(v&&v.list&&applyQs(v.list)) return v.at||0; return 0; }
+let ADQ=null;
+function adminPage(){ S.mode='admin'; show('adminView'); let ok=false; try{ ok=sessionStorage.getItem('noor.admin')==='1'; }catch(e){}
+  ok?adminDraw():adminGate(); }
+function adminGate(err){ const v=byId('adminView'); v.innerHTML=`<div class="adwrap"><div class="adgate"><h1>Host admin</h1><p>Enter the PIN to edit the questions.</p>
+  <form id="adform"><input id="adpin" type="password" inputmode="numeric" maxlength="8" autocomplete="off" aria-label="PIN"><button class="pb" type="submit">Open</button></form><div class="status">${err||''}</div><button class="pb alt" id="adback">Back to the game</button></div></div>`;
+  byId('adform').onsubmit=e=>{ e.preventDefault(); if(byId('adpin').value===ADM_PIN){ try{ sessionStorage.setItem('noor.admin','1'); }catch(x){} adminDraw(); } else adminGate('That PIN is not right.'); };
+  byId('adback').onclick=leaveAdmin; setTimeout(()=>byId('adpin').focus(),50); }
+function leaveAdmin(){ if(location.hash==='#admin') history.replaceState(null,'',location.pathname+location.search); location.reload(); }
+async function adminDraw(){ const v=byId('adminView'); v.innerHTML='<div class="adwrap"><p class="admsg">Loading the questions...</p></div>';
+  const at=await loadQs(); ADQ=QS.map(toText); adminRender(at?'Showing the saved questions from '+new Date(at).toLocaleString()+'.':'Showing the original questions.'); }
+function adminRender(msg){ const v=byId('adminView'); const where=NET.mode==='fb'?'Saved online, so every laptop that hosts uses them.':'Online saving is not available here, so changes are saved on this device only.';
+  v.innerHTML=`<div class="adwrap"><header class="adhead"><div><h1>Questions</h1><p>Edit the ten questions played in each game. Questions 1 to 7 come before the second story, 8 to 10 after it. ${where}</p></div>
+    <div class="adbtns"><button class="pb" id="adsave">Save questions</button><button class="pb alt" id="adreset">Reset to original</button><button class="pb alt" id="adexit">Back to the game</button></div></header>
+    <p class="admsg" id="admsg" role="status">${esc(msg||'')}</p>
+    <div class="adlist">${ADQ.map((q,i)=>`<section class="adq" data-i="${i}"><div class="adqtop"><b>Question ${i+1}</b>${i===7?'<span class="adtag">After Story 2</span>':''}
+      <label>Level <select data-f="l">${[['e','Easy'],['m','Medium'],['h','Hard']].map(([k,n])=>`<option value="${k}" ${q.l===k?'selected':''}>${n}</option>`).join('')}</select></label>
+      <span class="admove"><button data-mv="-1" ${i===0?'disabled':''} aria-label="Move up">&#9650;</button><button data-mv="1" ${i===9?'disabled':''} aria-label="Move down">&#9660;</button></span></div>
+      <label class="adfull">Question<textarea data-f="q" rows="2">${esc(q.q)}</textarea></label>
+      <div class="adopts">${q.o.map((o,j)=>`<label class="adopt ${q.a===j?'on':''}"><input type="radio" name="a${i}" value="${j}" ${q.a===j?'checked':''} aria-label="Option ${'ABCD'[j]} is correct"><b>${'ABCD'[j]}</b><input data-o="${j}" value="${esc(o)}" aria-label="Option ${'ABCD'[j]}"></label>`).join('')}</div>
+      <p class="adhint">Tick the circle beside the correct answer.</p>
+      <div class="adrow"><label>Reference<input data-f="ref" value="${esc(q.ref)}" placeholder="e.g. Al-Furqan 25:1"></label><label class="adgrow">Note shown with the answer<input data-f="note" value="${esc(q.note)}"></label></div></section>`).join('')}</div></div>`;
+  const read=()=>{ v.querySelectorAll('.adq').forEach(sec=>{ const i=+sec.dataset.i, q=ADQ[i]; sec.querySelectorAll('[data-f]').forEach(f=>q[f.dataset.f]=f.value); q.o=[...sec.querySelectorAll('[data-o]')].map(x=>x.value); const c=sec.querySelector(`input[name="a${i}"]:checked`); q.a=c?+c.value:q.a; }); };
+  v.querySelectorAll('.adq input[type=radio]').forEach(rb=>rb.onchange=()=>{ const sec=rb.closest('.adq'); sec.querySelectorAll('.adopt').forEach((l,j)=>l.classList.toggle('on',j===+rb.value)); });
+  v.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>{ read(); const i=+b.closest('.adq').dataset.i, j=i+(+b.dataset.mv); [ADQ[i],ADQ[j]]=[ADQ[j],ADQ[i]]; adminRender('Moved. Remember to save.'); });
+  byId('adexit').onclick=leaveAdmin;
+  byId('adreset').onclick=()=>{ const b=byId('adreset'); if(b.dataset.c!=='1'){ b.dataset.c='1'; b.textContent='Tap again to reset'; setTimeout(()=>{ b.dataset.c=''; b.textContent='Reset to original'; },4000); return; } ADQ=DEFQ.map(toText); adminRender('Original questions loaded. Tap Save questions to use them.'); };
+  byId('adsave').onclick=async()=>{ read(); const bad=ADQ.findIndex(q=>!validQ(q)); const m=byId('admsg');
+    if(bad>=0){ m.textContent=`Question ${bad+1} needs the question and all four answers filled in.`; m.classList.add('err'); v.querySelectorAll('.adq')[bad].scrollIntoView({behavior:'smooth',block:'center'}); return; }
+    m.classList.remove('err'); const rec={at:Date.now(),list:ADQ.map(q=>({l:q.l,q:q.q.trim(),o:q.o.map(o=>o.trim()),a:q.a,ref:(q.ref||'').trim(),note:(q.note||'').trim()}))};
+    lsSet(QKEY,JSON.stringify(rec)); applyQs(rec.list); let online=false;
+    if(NET.mode==='fb'&&qRef()){ try{ await Promise.race([qRef().set(rec),new Promise((_,j)=>setTimeout(()=>j(0),7000))]); online=true; }catch(e){} }
+    m.textContent=online?'Saved online. The next game on any laptop will use these questions.':'Saved on this device. Host the game from this laptop to use them.'; };
+}
+
 /* ================= SCREENS ================= */
-function show(id){ ['home','phoneView','hostView'].forEach(x=>byId(x).hidden=x!==id); document.body.dataset.mode=id; }
-async function startHost(){ const note=byId('hnote'); note.textContent='Opening the game...'; SND.init(); S.started=true; GAME=Date.now()%100000000;
-  try{ await hostOpen(); }catch(e){ note.textContent='Could not open a game room on this network. Try again, or check the internet connection.'; return; }
+function show(id){ ['home','phoneView','hostView','adminView'].forEach(x=>byId(x).hidden=x!==id); document.body.dataset.mode=id; }
+async function startHost(){ const note=byId('hnote'); note.textContent='Opening the game...'; SND.init(); unlockAudio(); S.started=true; GAME=Date.now()%100000000;
+  await loadQs();
+  try{ await hostOpen(); }catch(e){ note.textContent='Could not open a game room on this network. Try again, or check the internet connection.'+(e&&(e.code||e.type||e.message)?' ('+(e.code||e.type||e.message)+')':''); return; }
   S.mode='host'; show('hostView'); go(0); }
 async function boot(){ show('home'); const hb=byId('hHost'), jb=byId('hJoin'), note=byId('hnote'); hb.disabled=true; jb.disabled=true; note.textContent='Connecting...';
   const mode=await initNet();
   if(mode==='none'){ note.textContent='Live play needs an internet connection. Please reload the page.'; return; }
   jb.disabled=false; hb.disabled=!canHost();
   note.textContent=canHost()?'Host: open this on the laptop connected to the projector and tap Host. Everyone else: tap Join on your phone.':'Tap Join to play on your phone.';
+  if(location.hash==='#admin'&&canHost()) return adminPage();
   if(/^#join-[A-Za-z]{4}$/.test(location.hash)||(!canHost()&&mode==='room')) phoneJoinForm(); }
+byId('hAdmin').onclick=()=>{ if(!canHost()) return; adminPage(); };
 byId('hHost').onclick=startHost;
 byId('hJoin').onclick=()=>{ SND.init(); phoneJoinForm(); };
-byId('hbNext').onclick=()=>next();
+byId('hbNext').onclick=()=>{ unlockAudio(); next(); };
 byId('hbBack').onclick=()=>go(S.scene-1);
 byId('hbAuto').onclick=e=>{ S.auto=!S.auto; e.currentTarget.setAttribute('aria-pressed',S.auto); e.currentTarget.textContent=S.auto?'Auto: on':'Auto: off'; };
 byId('hbSnd').onclick=e=>{ SND.set(!SND.on); e.currentTarget.textContent=SND.on?'Sound on':'Sound off'; if(!SND.on){ try{speechSynthesis.cancel();}catch(x){} if(VO.a) VO.a.pause(); if(S.bgA) S.bgA.pause(); } else if(S.bgA) S.bgA.play().catch(()=>{}); };
