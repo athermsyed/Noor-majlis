@@ -1590,6 +1590,7 @@ function setBG(key,d){ const old=$$('.bg'); const n=el(BG(key,d)); n.classList.a
 
 /* ================= NOOR MAJLIS: LIVE GAME ENGINE ================= */
 const GOLD='#e9b949';
+const QT=22; /* seconds to answer each question */
 const ARTIFACT_URL=window.NOOR_URL||'';
 const tv=document.getElementById('tv'), ph=document.getElementById('ph');
 const S={timers:[],started:false,bgA:null,mode:'home',scene:-1,auto:true};
@@ -1713,7 +1714,7 @@ function onRoster(){ for(const pr of netPeers()){ const z=pr.pres; if(z.role!=='
     let p=PL.get(z.pid); if(!p){ p=makePlayer(z.pid,z); FX.tap(); if(S.scene===0) lobbyAdd(p); }
     p.seen=Date.now(); p.peer=pr.peer;
     if(z.img&&z.img!==p.photo) setLook(p,z);
-    const a=z.ans; if(a&&a.g===GAME&&Number.isInteger(a.q)&&Q.open&&a.q===Q.k&&p.ans[a.q]==null&&Number.isInteger(a.a)&&a.a>=0&&a.a<4) recordAnswer(p,a.a,Math.max(0,Math.min(20,+a.t||20)));
+    const a=z.ans; if(a&&a.g===GAME&&Number.isInteger(a.q)&&Q.open&&a.q===Q.k&&p.ans[a.q]==null&&Number.isInteger(a.a)&&a.a>=0&&a.a<4) recordAnswer(p,a.a,Math.max(0,Math.min(QT,+a.t||QT)));
     if(z.ameen===GAME&&!p.ameen&&DUA.on) sayAmeen(p); }
   byId('hcount').textContent=PL.size+(PL.size===1?' player':' players'); }
 setInterval(()=>{ if(S.mode==='host'){ onRoster(); sendState(); } },1500);
@@ -1723,7 +1724,7 @@ const Q={k:-1,open:false,t0:0,done:false};
 const DUA={on:false};
 let SUB={};
 function stateObj(){ const sc=SCN[S.scene]||{}; const s={g:GAME,st:sc.rk||'',s:sc.key||'home',k:sc.k!=null?sc.k:-1,b:SUB.b!=null?SUB.b:-1,ph:SUB.ph||''};
-  if(sc.key==='q'){ s.open=Q.open; if(Q.open) s.rem=Math.max(0,20-(Date.now()-Q.t0)/1000); const q=QS[sc.k]; if(q){ s.qd={l:q.l,q:q.q,o:q.o}; if(SUB.ph==='rev') Object.assign(s.qd,{a:q.a,ref:q.ref,note:q.note}); } }
+  if(sc.key==='q'){ s.open=Q.open; if(Q.open) s.rem=Math.max(0,QT-(Date.now()-Q.t0)/1000); const q=QS[sc.k]; if(q){ s.qd={l:q.l,q:q.q,o:q.o}; if(SUB.ph==='rev') Object.assign(s.qd,{a:q.a,ref:q.ref,note:q.note}); } }
   if(SUB.ph==='rev'||sc.key==='top3'||sc.key==='dua'||sc.key==='end'){ const rk=ranked(); s.r={}; rk.forEach((p,i)=>{ if(!p.bot) s.r[p.pid]=[p.score,i+1,p.ans[Q.k]===undefined?-1:(QS[Q.k]&&p.ans[Q.k]===QS[Q.k].a?1:0),p.last||0]; }); s.n=rk.length; }
   if(sc.key==='top3'||sc.key==='dua'||sc.key==='end'){ const w=ranked()[0]; if(w){ s.wn=w.n; s.wx=w.sex; } }
   return s; }
@@ -1741,9 +1742,9 @@ add('lobby',{label:'Join',run:runLobby});
 add('gather',{label:'Gather',run:runGather,dur:()=>7400+Math.round(((window.WELCOME_AUDIO||{}).dur||8)*1000)+1500});
 add('story',{label:'Story 1',rk:'ant',run:()=>runStory('ant')});
 add('play',{label:'Let us play',run:runPlay,dur:()=>13000});
-for(let k=0;k<10;k++){ add('q',{label:'Question '+(k+1),k,run:()=>runQ(k)}); if(k===6) add('story',{label:'Story 2',rk:'musa',run:()=>runStory('musa')}); }
+for(let k=0;k<10;k++) add('q',{label:'Question '+(k+1),k,run:()=>runQ(k)});
 add('top3',{label:'Top three',run:runTop3,dur:()=>16000});
-add('dua',{label:'Dua',run:runDua,dur:()=>27000});
+add('dua',{label:'Dua',run:runDua,dur:()=>30000});
 add('end',{label:'The end',run:runEnd});
 
 function go(i){ clearAll(); DUA.on=false; Q.open=false; SUB={}; S.scene=Math.max(0,Math.min(SCN.length-1,i)); const sc=SCN[S.scene];
@@ -1795,14 +1796,14 @@ function runPlay(){ tv.innerHTML=BG('majlis')+elderHTML()+seatHTML()+`<div class
 function runQ(k){ const q=QS[k]; Q.k=k; Q.open=false; Q.done=false; SUB={ph:'q'};
   const list=players(); list.forEach(p=>{ delete p.ans[k]; p.last=0; });
   tv.innerHTML=BG('arena')+`<div class="qcard"><div class="qtop"><span class="lvl ${q.l}">${LVL[q.l]}</span><span>Question ${k+1} of 10</span></div><div class="qtext">${q.q}</div></div>
-    <div class="ring"><svg viewBox="0 0 100 100"><circle class="bgc" cx="50" cy="50" r="42"/><circle class="fgc" id="rf" cx="50" cy="50" r="42"/></svg><span id="rs">20</span></div>
+    <div class="ring"><svg viewBox="0 0 100 100"><circle class="bgc" cx="50" cy="50" r="42"/><circle class="fgc" id="rf" cx="50" cy="50" r="42"/></svg><span id="rs">${QT}</span></div>
     <div class="opts" id="opts">${q.o.map((o,i)=>`<div class="opt k${i}"><b>${'ABCD'[i]}</b><span>${o}</span><span class="n"></span></div>`).join('')}</div>`+rowHTML(list)+`<div class="ansc" id="ansc"></div>`;
   T(()=>speak(plain(q.q)),900);
   $$('.opt').forEach((o,i)=>T(()=>{ o.classList.add('in'); FX.tap(); },2600+i*650));
   T(()=>{ Q.open=true; Q.t0=Date.now(); sendState(); tickQ(); botsAnswer(k); },5200); }
-function tickQ(){ if(!Q.open) return; const el2=(Date.now()-Q.t0)/1000, left=Math.max(0,20-el2); const rs=$('#rs'), rf=$('#rf'); if(!rs) return;
+function tickQ(){ if(!Q.open) return; const el2=(Date.now()-Q.t0)/1000, left=Math.max(0,QT-el2); const rs=$('#rs'), rf=$('#rf'); if(!rs) return;
   const sec=Math.ceil(left); if(rs.textContent!=String(sec)){ rs.textContent=sec; if(sec<=5&&sec>0) FX.tick(); }
-  rf.style.strokeDashoffset=(264*Math.min(1,el2/20)).toFixed(1);
+  rf.style.strokeDashoffset=(264*Math.min(1,el2/QT)).toFixed(1);
   const act=players().filter(p=>p.bot||Date.now()-p.seen<8000); const answered=act.filter(p=>p.ans[Q.k]!=null).length; const ac=$('#ansc'); if(ac) ac.textContent=`${answered} of ${act.length} answered`;
   if(left<=0||(act.length&&answered>=act.length&&el2>3)){ if(left>0){ Q.open=false; T(()=>reveal(Q.k),1200); } else { Q.open=false; reveal(Q.k); } return; }
   requestAnimationFrame(tickQ); }
@@ -1810,7 +1811,7 @@ function recordAnswer(p,a,t){ if(p.ans[Q.k]!=null) return; p.ans[Q.k]=a; p.t=t; 
 function botsAnswer(k){ players().filter(p=>p.bot).forEach(p=>{ const t=3+((p.id*37+k*13)%11)*1.4; T(()=>{ if(!Q.open||Q.k!==k) return; const right=((p.id*7+k*3)%10)<7; recordAnswer(p,right?QS[k].a:(QS[k].a+1+p.id%3)%4,t); },t*1000); }); }
 function reveal(k){ if(Q.done) return; Q.done=true; Q.open=false; SUB={ph:'rev'}; const q=QS[k], ops=$('#opts'); if(!ops) return; ops.classList.add('rev'); const opts=$$('.opt');
   const list=players(); const cnt=[0,0,0,0];
-  list.forEach(p=>{ const a=p.ans[k]; if(a!=null) cnt[a]++; if(a===q.a){ const g=100+Math.round(50*Math.max(0,1-(p.t||20)/20)); p.score+=g; p.time+=p.t||20; p.last=g; } else { p.last=0; p.time+=20; } });
+  list.forEach(p=>{ const a=p.ans[k]; if(a!=null) cnt[a]++; if(a===q.a){ const g=100+Math.round(50*Math.max(0,1-(p.t||QT)/QT)); p.score+=g; p.time+=p.t||QT; p.last=g; } else { p.last=0; p.time+=QT; } });
   sendState();
   const rs=$('#rs'); if(rs) rs.textContent='0'; const rf=$('#rf'); if(rf) rf.style.strokeDashoffset='264';
   opts[q.a].classList.add('ok'); opts.forEach((o,i)=>o.querySelector('.n').textContent=cnt[i]+(cnt[i]===1?' person':' people'));
@@ -1830,6 +1831,7 @@ function runTop3(){ const rk=ranked(), top=rk.slice(0,3), rest=rk.slice(3);
   [2,1,0].forEach((r,j)=>{ if(!top[r]) return; T(()=>{ const e=plEl(top[r]); e.style.opacity=1; joy(top[r],r===0); FX.light(); if(r===0) e.insertAdjacentHTML('afterbegin','<div class="halo" style="inset:-30% -40%"></div>'); },1600+j*2800); });
   if(top[0]) T(()=>{ banner('مَا شَاءَ اللَّهُ','MashaAllah, '+esc(top[0].n)); FX.murmur(); rest.forEach((p,i)=>T(()=>{ const f=figOf(p); if(f) f.classList.add('romp'); },i*100)); },9600); }
 function duaText(w){ const f=w&&w.sex==='f'; return {ar:f?'اللَّهُمَّ اجْعَلْهَا وَإِيَّانَا مِنْ أَهْلِ الْجَنَّةِ':'اللَّهُمَّ اجْعَلْهُ وَإِيَّانَا مِنْ أَهْلِ الْجَنَّةِ',en:`O Allah, make ${f?'her':'him'}, and all of us, among the people of Jannah.`}; }
+function duaSpoken(w){ const f=w&&w.sex==='f'; return `O Allah, make ${f?'her':'him'}, ${plain(w.n)}, and all of us, among the people of Jannah.`; }
 function sayAmeen(p){ if(p.ameen) return; p.ameen=true; const e=plEl(p); if(e){ e.querySelector('.bub').classList.add('on'); cls(e.querySelector('.fig'),'hop',950); } FX.tap(); }
 function runDua(){ const rk=ranked(), w=rk[0]; if(!w){ tv.innerHTML=BG('majlis'); return; } const others=rk.slice(1); players().forEach(p=>p.ameen=false); const D=duaText(w);
   tv.innerHTML=BG('majlis')+`<div class="halo" style="left:41%;bottom:0;width:18%;height:40%"></div>`+pl(w,44,3,12,{st:'z-index:40'})+others.map((p,i)=>pl(p,i%2?112:-12,8,6.4,{})).join('');
@@ -1837,10 +1839,11 @@ function runDua(){ const rk=ranked(), w=rk[0]; if(!w){ tv.innerHTML=BG('majlis')
     e.style.zIndex=Math.round(20-10*Math.sin(th)); T(()=>{ f.classList.add('walk'); e.style.transition='left 3.4s linear,bottom 3.4s linear,width 3.4s linear'; e.style.left=x+'%'; e.style.bottom=b+'%'; e.style.width=w2+'cqw'; T(()=>f.classList.remove('walk'),3500); },300+(i%10)*120); });
   T(()=>FX.air(),300);
   T(()=>{ tv.appendChild(el(`<div class="duacard"><div class="da">${D.ar}</div><div class="de">${D.en}</div></div>`)); FX.light(); DUA.on=true; SUB={ph:'dua'}; sendState(); },4600);
-  T(()=>{ FX.murmur(); others.filter(p=>p.bot).forEach((p,i)=>T(()=>sayAmeen(p),i*420)); },8800);
-  T(()=>FX.murmur(),11800); T(()=>joy(w,true),13600);
-  T(()=>{ banner('آمِين','Ameen',false,40); cls(figOf(w),'wave',2100); FX.light(); },14200);
-  T(()=>{ const r=rnd(5); for(let i=0;i<26;i++) tv.insertAdjacentHTML('beforeend',`<i class="petal" style="left:${(r()*100).toFixed(1)}%;background:${['#e2657a','#f5b8c2','#ffe08a','#ffffff'][i%4]};animation-delay:-${(r()*7).toFixed(2)}s"></i>`); },15500); }
+  T(()=>speak(duaSpoken(w),.78),5600);
+  T(()=>{ FX.murmur(); others.filter(p=>p.bot).forEach((p,i)=>T(()=>sayAmeen(p),i*420)); },12000);
+  T(()=>FX.murmur(),14500); T(()=>joy(w,true),16000);
+  T(()=>{ banner('آمِين','Ameen',false,40); cls(figOf(w),'wave',2100); FX.light(); },16600);
+  T(()=>{ const r=rnd(5); for(let i=0;i<26;i++) tv.insertAdjacentHTML('beforeend',`<i class="petal" style="left:${(r()*100).toFixed(1)}%;background:${['#e2657a','#f5b8c2','#ffe08a','#ffffff'][i%4]};animation-delay:-${(r()*7).toFixed(2)}s"></i>`); },17800); }
 function runEnd(){ const rk=ranked();
   tv.innerHTML=BG('majlis')+`<div class="endcard"><div class="a">جَزَاكُمُ اللَّهُ خَيْرًا</div><h3>JazakumAllahu khayran</h3><p>Thank you for joining tonight&rsquo;s majlis.</p><div class="endlist">${rk.slice(0,10).map((p,i)=>`<div><span>${i+1}</span><b>${esc(p.n)}</b><em>${p.score}</em></div>`).join('')}</div></div>`; }
 
@@ -1913,14 +1916,14 @@ function renderPhone(){ if(!ME.joined) return; const s=ME.st;
   if(s.s==='gather') return C(`${avBox()}<div class="t">Please sit and listen</div><div class="s">Shaykh Abdullah is about to share a short reminder. The ayat will also show here in large text.</div>`);
   if(s.s==='story'){ const R0=REM[storyKeyFor(s)]; const b=R0&&R0.beats[Math.max(0,s.b)]; if(!b) return C(`<div class="t">Please listen</div>`);
     return C(`<div class="chip">Part ${Math.max(0,s.b)+1} of ${R0.beats.length}</div>${b.ar?`<div class="par">${AR(b.ar)}</div>`:''}<div class="t" style="font-size:20px">${b.en}</div><div class="s">${R0.sura} &middot; ${b.ref}</div><div class="pnote">${b.nar}</div>`); }
-  if(s.s==='play') return C(`<div class="chip g">Get ready</div><div class="t">Ten questions</div><div class="s">Each question appears here with four big buttons. You have 20 seconds; there is no rush.</div>`);
+  if(s.s==='play') return C(`<div class="chip g">Get ready</div><div class="t">Ten questions</div><div class="s">Each question appears here with four big buttons. You have ${QT} seconds; there is no rush.</div>`);
   if(s.s==='q'){ const q=s.qd||QS[s.k]; if(!q) return; const mine=ME.ans[s.g+':'+s.k];
     if(s.ph==='rev'){ const r=s.r&&s.r[ME.pid]; if(q.a==null) return; const ok=r?r[2]===1:mine===q.a;
       return C(`<div class="chip ${ok?'g':'t'}">${ok?'MashaAllah, correct':'Not this time'}</div>${avBox(ok?'happy':'thinking')}<div class="t">${'ABCD'[q.a]}. ${q.o[q.a]}</div><div class="s">${q.ref}</div><div class="pnote">${q.note}</div>${r?`<div class="s">${ok?'+'+r[3]+' points &middot; ':''}${r[0]} points &middot; place ${r[1]} of ${s.n}</div>`:''}`); }
     if(mine!=null) return C(`<div class="chip">Question ${s.k+1} of 10</div>${avBox('thinking')}<div class="t">Locked in</div><div class="s">You chose <b>${'ABCD'[mine]}. ${q.o[mine]}</b>. Watch the big screen.</div>`);
     ph.innerHTML=`<div class="chip" style="align-self:center">${LVL[q.l]} &middot; ${s.k+1} of 10</div><div class="pq">${q.q}</div>${s.open?`<div class="ptime"><i id="ptb"></i></div>`:'<div class="s">The answers are coming...</div>'}<div class="pans" id="pa">${q.o.map((o,i)=>`<button class="k${i}" ${s.open?'':'disabled style="opacity:.4"'}><b>${'ABCD'[i]}</b>${o}</button>`).join('')}</div>`;
-    if(s.open){ const end=Date.now()+(s.rem||20)*1000; const bar=byId('ptb'); (function t(){ if(!bar.isConnected) return; const l=Math.max(0,(end-Date.now())/1000); bar.style.width=(l/20*100)+'%'; if(l>0) requestAnimationFrame(t); })();
-      ph.querySelectorAll('#pa button').forEach((b,i)=>b.onclick=()=>{ if(ME.ans[s.g+':'+s.k]!=null) return; ME.ans[s.g+':'+s.k]=i; const t=Math.max(0,20-Math.max(0,(end-Date.now())/1000)); setPres({ans:{g:s.g,q:s.k,a:i,t:Math.round(t*10)/10}}); FX.tap(); ME.key=''; renderPhone(); }); }
+    if(s.open){ const end=Date.now()+(s.rem!=null?s.rem:QT)*1000; const bar=byId('ptb'); (function t(){ if(!bar.isConnected) return; const l=Math.max(0,(end-Date.now())/1000); bar.style.width=(l/QT*100)+'%'; if(l>0) requestAnimationFrame(t); })();
+      ph.querySelectorAll('#pa button').forEach((b,i)=>b.onclick=()=>{ if(ME.ans[s.g+':'+s.k]!=null) return; ME.ans[s.g+':'+s.k]=i; const t=Math.max(0,QT-Math.max(0,(end-Date.now())/1000)); setPres({ans:{g:s.g,q:s.k,a:i,t:Math.round(t*10)/10}}); FX.tap(); ME.key=''; renderPhone(); }); }
     return; }
   if(s.s==='top3'){ const r=s.r&&s.r[ME.pid]; const i=r?r[1]:0; return C(`<div class="chip g">${i&&i<=3?'MashaAllah':'Alhamdulillah'}</div>${avBox()}<div class="t">${i===1?'First place':i===2?'Second place':i===3?'Third place':i?'Place '+i:'Well done'}</div>${r?`<div class="s">${r[0]} points</div>`:''}`); }
   if(s.s==='dua'){ const f=s.wx==='f'; const D=duaText({sex:s.wx}); const said=ME.ameen===s.g;
@@ -1953,10 +1956,10 @@ function leaveAdmin(){ if(location.hash==='#admin') history.replaceState(null,''
 async function adminDraw(){ const v=byId('adminView'); v.innerHTML='<div class="adwrap"><p class="admsg">Loading the questions...</p></div>';
   const at=await loadQs(); ADQ=QS.map(toText); adminRender(at?'Showing the saved questions from '+new Date(at).toLocaleString()+'.':'Showing the original questions.'); }
 function adminRender(msg){ const v=byId('adminView'); const where=NET.mode==='fb'?'Saved online, so every laptop that hosts uses them.':'Online saving is not available here, so changes are saved on this device only.';
-  v.innerHTML=`<div class="adwrap"><header class="adhead"><div><h1>Questions</h1><p>Edit the ten questions played in each game. Questions 1 to 7 come before the second story, 8 to 10 after it. ${where}</p></div>
+  v.innerHTML=`<div class="adwrap"><header class="adhead"><div><h1>Questions</h1><p>Edit the ten questions played in each game, in the order they are asked. ${where}</p></div>
     <div class="adbtns"><button class="pb" id="adsave">Save questions</button><button class="pb alt" id="adreset">Reset to original</button><button class="pb alt" id="adexit">Back to the game</button></div></header>
     <p class="admsg" id="admsg" role="status">${esc(msg||'')}</p>
-    <div class="adlist">${ADQ.map((q,i)=>`<section class="adq" data-i="${i}"><div class="adqtop"><b>Question ${i+1}</b>${i===7?'<span class="adtag">After Story 2</span>':''}
+    <div class="adlist">${ADQ.map((q,i)=>`<section class="adq" data-i="${i}"><div class="adqtop"><b>Question ${i+1}</b>
       <label>Level <select data-f="l">${[['e','Easy'],['m','Medium'],['h','Hard']].map(([k,n])=>`<option value="${k}" ${q.l===k?'selected':''}>${n}</option>`).join('')}</select></label>
       <span class="admove"><button data-mv="-1" ${i===0?'disabled':''} aria-label="Move up">&#9650;</button><button data-mv="1" ${i===9?'disabled':''} aria-label="Move down">&#9660;</button></span></div>
       <label class="adfull">Question<textarea data-f="q" rows="2">${esc(q.q)}</textarea></label>
