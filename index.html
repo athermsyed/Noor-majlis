@@ -1424,16 +1424,16 @@ function speak(t,rate){ if(!SND.on||!S.started) return; try{ const u=new SpeechS
 
 /* ================= QUESTIONS AND RESULTS ================= */
 const QS=[
- {l:'m',q:'Two surahs begin with the word “Tabaraka.” One is Al-Mulk. What is the other?',o:['Al-Ahzab','Al-Furqan','Al-Hadid','Saba'],a:1,ref:'Al-Furqan 25:1',note:'Al-Furqan and Al-Mulk both open with Tabaraka.'},
- {l:'m',q:'What creature did Allah send to show Qabil how to bury his brother?',o:['A hoopoe','A dove','A crow','An eagle'],a:2,ref:'Al-Ma’idah 5:31',note:'Allah sent a crow, scratching the ground, to show him how to bury his brother.'},
- {l:'m',q:'On which mountain did the Ark of Nuh come to rest?',o:['Mount Sinai','Al-Judi','Uhud','Arafat'],a:1,ref:'Hud 11:44',note:'The Ark came to rest on Al-Judi.'},
- {l:'m',q:'What color was the cow that Bani Israil were told to slaughter?',o:['Black','White','Bright yellow','Red'],a:2,ref:'Al-Baqarah 2:69',note:'A bright yellow cow, pleasing to those who see it.'},
- {l:'h',q:'How many angels are placed over Saqar, according to Surah Al-Muddaththir?',o:['Seven','Twelve','Nineteen','Forty'],a:2,ref:'Al-Muddaththir 74:30',note:'Over it are nineteen.'},
- {l:'h',q:'For how long did the furious wind strike the people of ‘Ad?',o:['Three days','Seven nights and eight days','Forty days','Six days'],a:1,ref:'Al-Haqqah 69:7',note:'Seven nights and eight days, without a break.'},
- {l:'h',q:'Along with Maryam, which woman does Allah give as an example for the believers?',o:['The wife of Nuh','The mother of Musa','The wife of Firawn','The Queen of Sheba'],a:2,ref:'At-Tahrim 66:11',note:'The wife of Firawn. The wife of Nuh is given as an example of disbelief, in 66:10.'},
- {l:'h',q:'For how many years did Musa agree to work for the old man of Madyan?',o:['Three or five','Seven','Eight, or ten if he chose','Twelve'],a:2,ref:'Al-Qasas 28:27',note:'Eight years, and ten if he chose to complete them.'},
- {l:'h',q:'For which prophet did Allah make iron soft?',o:['Sulayman','Dawud','Dhul-Qarnayn','Nuh'],a:1,ref:'Saba 34:10',note:'Allah made iron soft for Dawud. Dhul-Qarnayn built a barrier of iron, but it was not softened for him.'},
- {l:'h',q:'Who said, “I wish I had died before this and been completely forgotten”?',o:['The wife of Firawn','The mother of Musa','Maryam','The wife of Imran'],a:2,ref:'Maryam 19:23',note:'Maryam said it as the pains of childbirth drove her to the trunk of a palm tree.'}
+ {"l": "m", "q": "Which surah of the Quran does not begin with Bismillah?", "o": ["Al-Anfal", "At-Tawbah", "Yunus", "Al-Ikhlas"], "a": 1, "ref": "At-Tawbah 9:1", "note": "At-Tawbah is the only surah that opens without Bismillah."},
+ {"l": "m", "q": "For how long did Nuh remain among his people, calling them to Allah?", "o": ["Three hundred years", "Five hundred years", "A thousand years less fifty", "Seven hundred years"], "a": 2, "ref": "Al-‘Ankabut 29:14", "note": "He remained among them a thousand years less fifty: nine hundred and fifty years."},
+ {"l": "m", "q": "How long did the young men stay asleep in the cave?", "o": ["Forty years", "One hundred years", "Three hundred years, plus nine", "Seventy years"], "a": 2, "ref": "Al-Kahf 18:25", "note": "They stayed in their cave three hundred years, and added nine."},
+ {"l": "m", "q": "How many gates does Jahannam have?", "o": ["Three", "Five", "Seven", "Eight"], "a": 2, "ref": "Al-Hijr 15:44", "note": "It has seven gates, and for each gate is an assigned portion of them."},
+ {"l": "m", "q": "Of the twelve months with Allah, how many are sacred?", "o": ["Two", "Three", "Four", "Six"], "a": 2, "ref": "At-Tawbah 9:36", "note": "Twelve months, of which four are sacred."},
+ {"l": "h", "q": "After Yunus was cast onto the open shore, what did Allah cause to grow over him?", "o": ["A palm tree", "A fig tree", "A gourd plant", "An olive tree"], "a": 2, "ref": "As-Saffat 37:146", "note": "Allah caused a gourd plant to grow over him."},
+ {"l": "h", "q": "In which city were the two angels Harut and Marut sent down?", "o": ["Egypt", "Babylon", "Madyan", "Saba"], "a": 1, "ref": "Al-Baqarah 2:102", "note": "The two angels at Babylon, Harut and Marut."},
+ {"l": "h", "q": "Which companion of the Prophet is mentioned by name in the Quran?", "o": ["Abu Bakr", "Bilal", "Zayd", "Ali"], "a": 2, "ref": "Al-Ahzab 33:37", "note": "Zayd is the only companion named in the Quran."},
+ {"l": "h", "q": "How many times does Surah Ar-Rahman ask, “Which of the favors of your Lord will you deny?”", "o": ["Twenty one", "Twenty nine", "Thirty one", "Forty"], "a": 2, "ref": "Ar-Rahman 55:13", "note": "The question is repeated thirty one times in the surah."},
+ {"l": "h", "q": "Which surah contains Bismillah twice?", "o": ["Al-Fatihah", "An-Naml", "Maryam", "Ya-Sin"], "a": 1, "ref": "An-Naml 27:30", "note": "Once at the start, and again in the letter of Sulayman to the Queen of Sheba."}
 ];
 const LVL={e:'Easy',m:'Medium',h:'Hard'};
 const AR=t=>String(t).replace(/ ۝ /g,' <i class="am"></i> ');
